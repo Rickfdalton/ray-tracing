@@ -2,6 +2,9 @@
 #define RAY_H_
 #include <glm/glm.hpp>
 
+/*
+P_t = t*B +A;
+*/
 class ray{
 public:
     ray(){};
