@@ -25,20 +25,6 @@ glm::vec3 color(const ray& r){
     return (1.0f - t)*(glm::vec3(1.0,1.0,1.0)) + t*(glm::vec3(0.5,0.7,1.0));
 }
 
-/*
-for those points present in ray and in the sphere.
-t*t*dot(B, B) + 2*t*dot(B,A-C) + dot(A-C,A-C) - R*R = 0
-*/
-float hit_sphere(const glm::vec3 &center, float radius, const ray& r){
-    glm::vec3 oc = r.origin() - center;
-    float a = glm::dot(r.direction(),r.direction());
-    float b = 2* glm::dot(r.direction(),oc);
-    float c = glm::dot(oc,oc) - radius * radius;
-    if ((b*b - 4*a*c)>0){
-        return (-b - sqrt(b*b - 4*a*c))/(2.0f*a) ; 
-    }
-    return -1.0f;
-}
 
 
 
