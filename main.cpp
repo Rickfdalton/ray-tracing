@@ -7,18 +7,21 @@ ray tracing
 #include "ray.h"
 
 glm::vec3 color(const ray& r);
-bool hit_sphere(const glm::vec3 &center, float radius, const ray& r);
+float hit_sphere(const glm::vec3 &center, float radius, const ray& r);
 
 
 glm::vec3 color(const ray& r){
-    //if hit sphere, color it red
-    if (hit_sphere(glm::vec3(0,0,-1), 0.5 , r)){
-        return glm::vec3(1.0,0.0,0.0);
+    //get the t of the point
+    float t = hit_sphere(glm::vec3(0,0,-1), 0.5 , r);
+    if (t>0.0){
+        glm::vec3 p_t = r.point_at_param(t);
+        glm::vec3 n_t = glm::normalize(p_t - glm::vec3(0,0,-1) );
+        return (0.5f)*(glm::vec3((n_t.x+1),(n_t.y+1),(n_t.z+1)));
     }
 
     glm::vec3 dir = r.direction();
     glm::vec3 unit_dir = glm::normalize(dir);
-    float t = 0.5f * (unit_dir.y + 1.0f);
+    t = 0.5f * (unit_dir.y + 1.0f);
     return (1.0f - t)*(glm::vec3(1.0,1.0,1.0)) + t*(glm::vec3(0.5,0.7,1.0));
 }
 
@@ -26,13 +29,15 @@ glm::vec3 color(const ray& r){
 for those points present in ray and in the sphere.
 t*t*dot(B, B) + 2*t*dot(B,A-C) + dot(A-C,A-C) - R*R = 0
 */
-bool hit_sphere(const glm::vec3 &center, float radius, const ray& r){
+float hit_sphere(const glm::vec3 &center, float radius, const ray& r){
     glm::vec3 oc = r.origin() - center;
     float a = glm::dot(r.direction(),r.direction());
     float b = 2* glm::dot(r.direction(),oc);
     float c = glm::dot(oc,oc) - radius * radius;
-
-    return (b*b - 4*a*c)>0;
+    if ((b*b - 4*a*c)>0){
+        return (-b - sqrt(b*b - 4*a*c))/(2.0f*a) ; 
+    }
+    return -1.0f;
 }
 
 
