@@ -25,14 +25,16 @@ public:
             if (temp > t_min && temp < t_max){
                 rec.t = temp;
                 rec.p = r.point_at_param(temp);
-                rec.normal = (rec.p - center)/radius;
+                glm::vec3 out_normal = (rec.p - center)/radius;
+                rec.set_face_normal(r,out_normal);
                 return true;
             }
             temp = (-b + sqrt(discriminant))/(2.0*a);
             if (temp > t_min && temp < t_max){
                 rec.t = temp;
-                rec.p = ray.point_at_param(temp);
-                rec.normal = (rec.p - center)/radius;
+                rec.p = r.point_at_param(temp);
+                glm::vec3 out_normal = (rec.p - center)/radius;
+                rec.set_face_normal(r,out_normal);
                 return true;
             }
         }
