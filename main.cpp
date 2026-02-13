@@ -76,6 +76,7 @@ int main(){
                 col+=color(r,world);
             }
             col/=float(ns);
+            col= glm::vec3(sqrt(col.x),sqrt(col.y),sqrt(col.z));
       
             int ir = static_cast<int>(255 * col[0]);
             int ig = static_cast<int>(255 * col[1]);
