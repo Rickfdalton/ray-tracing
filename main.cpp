@@ -9,20 +9,35 @@ ray tracing
 #include "hitablelist.h"
 #include "camera.h"
 
-
+//get random point in a sphere with O as origin
+glm::vec3 get_random_in_unit_sphere(){
+    glm::vec3 p;
+    do {
+        p = 2.0f * glm::vec3(drand48(),drand48(),drand48()) - glm::vec3(1.0,1.0,1.0);
+    }while(glm::length(p) >= 1);
+    return p;
+}
 
 
 glm::vec3 color(const ray& r, hitable* world){
     hit_record rec;
     if (world->hit(r,0.0,MAXFLOAT,rec)){
-        // calculate diffuse lighting
-        glm::vec3 object_color(0.3f,0.9f,0.3f);
+        // calculate Lambertian shading : direct lighting, no re emitting
+
+        /*glm::vec3 object_color(0.3f,0.9f,0.3f);
         float diffuse = glm::dot(rec.normal, -r.direction());
         if (diffuse<0){
             diffuse = 0.0f;
         }
         glm::vec3 diffuse_light = diffuse*object_color;
-        return 0.5f* diffuse_light;
+        return 0.5f* diffuse_light;*/
+
+        // but this is not intersting, we are not going to reemit the light ray into several directions
+        // monte carlo integration
+        // we chose the hitpoint, draw an imaginary sphere touching the hitpoint with radius unit normal, get random point inside the sphere and send ray
+        glm::vec3 target = rec.p + rec.normal + get_random_in_unit_sphere();
+        return 0.5f * color(ray(rec.p, target-rec.p), world);
+
         // return 0.5f*glm::vec3(rec.normal.x+1, rec.normal.y+1,rec.normal.z+1);
     }
 
@@ -36,7 +51,7 @@ glm::vec3 color(const ray& r, hitable* world){
 
 
 int main(){
-    std::ofstream outFile("outputs/diffuse.ppm", std::ios::out);
+    std::ofstream outFile("outputs/matte.ppm", std::ios::out);
 
     int nx = 400;
     int ny = 200;
