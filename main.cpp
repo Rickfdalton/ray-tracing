@@ -11,10 +11,19 @@ ray tracing
 
 
 
+
 glm::vec3 color(const ray& r, hitable* world){
     hit_record rec;
     if (world->hit(r,0.0,MAXFLOAT,rec)){
-        return 0.5f*glm::vec3(rec.normal.x+1, rec.normal.y+1,rec.normal.z+1);
+        // calculate diffuse lighting
+        glm::vec3 object_color(0.3f,0.9f,0.3f);
+        float diffuse = glm::dot(rec.normal, -r.direction());
+        if (diffuse<0){
+            diffuse = 0.0f;
+        }
+        glm::vec3 diffuse_light = diffuse*object_color;
+        return 0.5f* diffuse_light;
+        // return 0.5f*glm::vec3(rec.normal.x+1, rec.normal.y+1,rec.normal.z+1);
     }
 
     glm::vec3 dir = r.direction();
@@ -27,19 +36,17 @@ glm::vec3 color(const ray& r, hitable* world){
 
 
 int main(){
-    std::ofstream outFile("hittable.ppm", std::ios::out);
+    std::ofstream outFile("outputs/diffuse.ppm", std::ios::out);
 
     int nx = 400;
     int ny = 200;
     int ns = 100;
     outFile << "P3\n" << nx << " " <<ny << "\n255\n";
 
-
-    hitable* list[3];
+    hitable* list[2];
     list[0]= new sphere(glm::vec3(0,0,-1),0.5);
-    list[1]= new sphere(glm::vec3(1,0,-1),0.5);
-    list[2]= new sphere(glm::vec3(0,-100.5,-1),100);
-    hitable* world = new hitable_list(list,3);
+    list[1]= new sphere(glm::vec3(0,-100.5,-1),100);
+    hitable* world = new hitable_list(list,2);
 
     camera cam;
 
