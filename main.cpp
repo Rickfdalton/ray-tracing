@@ -21,7 +21,7 @@ glm::vec3 get_random_in_unit_sphere(){
 
 glm::vec3 color(const ray& r, hitable* world){
     hit_record rec;
-    if (world->hit(r,0.0,MAXFLOAT,rec)){
+    if (world->hit(r,0.0001f,MAXFLOAT,rec)){
         // calculate Lambertian shading : direct lighting, no re emitting
 
         /*glm::vec3 object_color(0.3f,0.9f,0.3f);
@@ -36,7 +36,7 @@ glm::vec3 color(const ray& r, hitable* world){
         // monte carlo integration
         // we chose the hitpoint, draw an imaginary sphere touching the hitpoint with radius unit normal, get random point inside the sphere and send ray
         glm::vec3 target = rec.p + rec.normal + get_random_in_unit_sphere();
-        return 0.5f * color(ray(rec.p, target-rec.p), world);
+        return 0.4f * color(ray(rec.p, target-rec.p), world);
 
         // return 0.5f*glm::vec3(rec.normal.x+1, rec.normal.y+1,rec.normal.z+1);
     }
