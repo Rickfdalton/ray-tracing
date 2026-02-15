@@ -114,17 +114,21 @@ glm::vec3 color(const ray& r, hitable* world , int depth){
 
 
 int main(){
-    std::ofstream outFile("outputs/lambertian.ppm", std::ios::out);
+    std::ofstream outFile("outputs/metal.ppm", std::ios::out);
 
     int nx = 400;
     int ny = 200;
     int ns = 100;
     outFile << "P3\n" << nx << " " <<ny << "\n255\n";
 
-    hitable* list[2];
+    hitable* list[4];
     list[0]= new sphere(glm::vec3(0,0,-1),0.5 , new lambertian(glm::vec3(0.8,0.3,0.3)));
     list[1]= new sphere(glm::vec3(0,-100.5,-1),100, new lambertian(glm::vec3(0.8,0.8,0.0)));
-    hitable* world = new hitable_list(list,2);
+    list[2]= new sphere(glm::vec3(1,0,-1),0.5, new metal(glm::vec3(0.8,0.6,0.2)));
+    list[3]= new sphere(glm::vec3(-1,0,-1),0.5, new metal(glm::vec3(0.8,0.8,0.8)));
+
+
+    hitable* world = new hitable_list(list,4);
 
     camera cam;
 
