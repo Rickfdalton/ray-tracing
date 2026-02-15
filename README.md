@@ -2,7 +2,8 @@ implementing Ray tracing from scratch in c++.
 
 current:
 
-<img width="708" height="355" alt="Screenshot 2026-02-13 at 23 41 12" src="https://github.com/user-attachments/assets/999eea7b-544a-4df3-996d-c757c643e3f5" />
+<img width="759" height="381" alt="Screenshot 2026-02-16 at 00 42 28" src="https://github.com/user-attachments/assets/15716e6d-ce62-44c2-bb6f-0a05990dd15e" />
+
 
 check outputs directory for the ray tracing progress.
 
