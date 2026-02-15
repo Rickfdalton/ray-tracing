@@ -1,13 +1,18 @@
 #ifndef HITABLE_H_
 #define HITABLE_H_
 
+#include <glm/glm.hpp>
 #include "ray.h"
+
+class material;
 
 struct hit_record {
     float t;
     glm::vec3 p;
     glm::vec3 normal;
     bool front_face;
+    material *mat_ptr;
+
 
     void set_face_normal(const ray& r, glm::vec3 outward_normal){
         if(glm::dot(r.direction(),outward_normal)<0){

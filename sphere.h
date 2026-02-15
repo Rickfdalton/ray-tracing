@@ -9,7 +9,7 @@ class sphere: public hitable
 {
 public:
     sphere() {};
-    sphere(glm::vec3 center, float radius): center(center), radius(radius) {};
+    sphere(glm::vec3 center, float radius, material* material_ptr): center(center), radius(radius),material_ptr(material_ptr) {};
     virtual bool hit(const ray &r, float t_min, float t_max, hit_record &rec) const override{
         /*
         for those points present in ray and in the sphere.
@@ -27,6 +27,7 @@ public:
                 rec.p = r.point_at_param(temp);
                 glm::vec3 out_normal = (rec.p - center)/radius;
                 rec.set_face_normal(r,out_normal);
+                rec.mat_ptr = material_ptr;
                 return true;
             }
             temp = (-b + sqrt(discriminant))/(2.0*a);
@@ -35,6 +36,8 @@ public:
                 rec.p = r.point_at_param(temp);
                 glm::vec3 out_normal = (rec.p - center)/radius;
                 rec.set_face_normal(r,out_normal);
+                rec.mat_ptr = material_ptr;
+
                 return true;
             }
         }
@@ -43,6 +46,7 @@ public:
     }
     glm::vec3 center;
     float radius;
+    material* material_ptr;
 };
 
 

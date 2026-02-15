@@ -9,6 +9,7 @@ ray tracing
 #include "hitablelist.h"
 #include "camera.h"
 
+
 //get random point in a sphere with O as origin
 glm::vec3 get_random_in_unit_sphere(){
     glm::vec3 p;
@@ -18,11 +19,64 @@ glm::vec3 get_random_in_unit_sphere(){
     return p;
 }
 
+//get the reflected vector
+glm::vec3 reflect(glm::vec3& v, glm::vec3& n){
+    return v + 2*(glm::dot(-v,n));
+}
 
-glm::vec3 color(const ray& r, hitable* world){
+class material{
+public:
+    virtual bool scatter(
+        const ray& r_in,
+        const hit_record& rec,
+        glm::vec3& attenuation,
+        ray& r_scattered
+    ) const =0;
+    virtual ~material() {}
+};
+
+class lambertian : public material{
+public:
+    lambertian(const glm::vec3& a) : albedo(a){}
+    virtual bool scatter(
+        const ray& r_in,
+        const hit_record& rec,
+        glm::vec3& attenuation,
+        ray& r_scattered
+    ) const override {
+        glm::vec3 target = rec.p + rec.normal + get_random_in_unit_sphere();
+        r_scattered = ray(rec.p, target-rec.p);
+        attenuation = albedo;
+        return true;
+    }
+
+    glm::vec3 albedo; //reflectivity
+};
+
+//metal reflects using the reflect formula not just scatters
+class metal : public material{
+public:
+    metal(const glm::vec3& a):albedo(a){}
+    virtual bool scatter(
+        const ray& r_in,
+        const hit_record& rec,
+        glm::vec3& attenuation,
+        ray& r_scattered
+    ) const override {
+        r_scattered = ray(rec.p, reflect(glm::normalize(r_in.direction()), rec.normal));
+        attenuation= albedo;
+        return (glm::dot(r_scattered.direction(),rec.normal)>0);
+    }
+
+    glm::vec3 albedo;
+};
+
+
+// depth? how many bounces are still allowed
+glm::vec3 color(const ray& r, hitable* world , int depth){
     hit_record rec;
-    if (world->hit(r,0.0001f,MAXFLOAT,rec)){
-        // calculate Lambertian shading : direct lighting, no re emitting
+    if (world->hit(r,0.00000001f,MAXFLOAT,rec)){
+        //1. calculate diffuse shading : direct lighting, no re emitting
 
         /*glm::vec3 object_color(0.3f,0.9f,0.3f);
         float diffuse = glm::dot(rec.normal, -r.direction());
@@ -32,12 +86,21 @@ glm::vec3 color(const ray& r, hitable* world){
         glm::vec3 diffuse_light = diffuse*object_color;
         return 0.5f* diffuse_light;*/
 
-        // but this is not intersting, we are not going to reemit the light ray into several directions
+        //2. but this is not intersting, we are not going to reemit the light ray into several directions
         // monte carlo integration
         // we chose the hitpoint, draw an imaginary sphere touching the hitpoint with radius unit normal, get random point inside the sphere and send ray
-        glm::vec3 target = rec.p + rec.normal + get_random_in_unit_sphere();
-        return 0.4f * color(ray(rec.p, target-rec.p), world);
+        // glm::vec3 target = rec.p + rec.normal + get_random_in_unit_sphere();
+        // return 0.4f * color(ray(rec.p, target-rec.p), world);
 
+        //3. lambertian and metal impl
+        ray r_scattered;
+        glm::vec3 attenuation;
+
+        if(depth <50 && rec.mat_ptr->scatter(r,rec,attenuation,r_scattered) ){
+            return attenuation*color(r_scattered, world, depth+1) ;
+        }else{
+            return glm::vec3(0,0,0) ;
+        }
         // return 0.5f*glm::vec3(rec.normal.x+1, rec.normal.y+1,rec.normal.z+1);
     }
 
@@ -51,7 +114,7 @@ glm::vec3 color(const ray& r, hitable* world){
 
 
 int main(){
-    std::ofstream outFile("outputs/matte.ppm", std::ios::out);
+    std::ofstream outFile("outputs/lambertian.ppm", std::ios::out);
 
     int nx = 400;
     int ny = 200;
@@ -59,8 +122,8 @@ int main(){
     outFile << "P3\n" << nx << " " <<ny << "\n255\n";
 
     hitable* list[2];
-    list[0]= new sphere(glm::vec3(0,0,-1),0.5);
-    list[1]= new sphere(glm::vec3(0,-100.5,-1),100);
+    list[0]= new sphere(glm::vec3(0,0,-1),0.5 , new lambertian(glm::vec3(0.8,0.3,0.3)));
+    list[1]= new sphere(glm::vec3(0,-100.5,-1),100, new lambertian(glm::vec3(0.8,0.8,0.0)));
     hitable* world = new hitable_list(list,2);
 
     camera cam;
@@ -73,7 +136,7 @@ int main(){
                 float u = float(i+drand48())/float(nx);
                 float v = float(j+drand48())/float(ny);
                 ray r = cam.get_ray(u,v);
-                col+=color(r,world);
+                col+=color(r,world,0);
             }
             col/=float(ns);
             col= glm::vec3(sqrt(col.x),sqrt(col.y),sqrt(col.z));
