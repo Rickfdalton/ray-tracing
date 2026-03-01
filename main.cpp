@@ -21,8 +21,9 @@ glm::vec3 get_random_in_unit_sphere(){
 
 //get the reflected vector
 glm::vec3 reflect(glm::vec3& v, glm::vec3& n){
-    return v + 2*(glm::dot(-v,n));
+    return v + 2.0f *(glm::dot(-v,n)*n);
 }
+
 
 class material{
 public:
