@@ -19,11 +19,14 @@ struct hit_record {
             //ray hitting point from outside
             //point is in front side
             normal =outward_normal;
+            front_face = true;
 
         }else{
             //ray hitting point from inside
             //point is in back side
             normal = -outward_normal;
+            front_face = false;
+
         }
     }
 };

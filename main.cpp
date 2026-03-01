@@ -3,11 +3,13 @@ ray tracing
 */
 #include <iostream>
 #include <fstream>
+#include <cmath>
 #include <glm/glm.hpp>
 #include "ray.h"
 #include "sphere.h"
 #include "hitablelist.h"
 #include "camera.h"
+
 
 
 //get random point in a sphere with O as origin
@@ -24,6 +26,45 @@ glm::vec3 reflect(glm::vec3& v, glm::vec3& n){
     return v + 2.0f *(glm::dot(-v,n)*n);
 }
 
+//get the refracted vector
+//using snells law
+// n_i/n_o = sin(i)/sin(o)
+
+/*
+idea : this implemetation is not ray decomposition, this is geometry
+this result in numerical instability and black spots
+*/
+// glm::vec3 refract(const glm::vec3& v, const glm::vec3& n, float ni_over_no) {
+//     glm::vec3 unit_v = glm::normalize(v);
+//     float cos_i = glm::dot(-unit_v, n);
+//     float sin_i = sqrt(1.0f - cos_i * cos_i);
+//     float sin_o = sin_i * ni_over_no;
+
+//     if (sin_o >= 1.0f)
+//         return reflect(unit_v, n);  // TIR
+
+//     if (sin_o < 1e-6f)
+//         return unit_v;
+
+//     float cos_o = sqrt(1.0f - sin_o * sin_o);
+//     float scale = (sin_i * cos_o - cos_i * sin_o) / sin_o;  // sin(i-o)/sin(o)
+//     return unit_v + scale * (-n);
+// }
+
+/*
+now we decompose incident ray
+https://ocw.mit.edu/courses/6-837-computer-graphics-fall-2012/resources/mit6_837f12_lec13/
+*/
+bool refract_mit(const glm::vec3& v, const glm::vec3& n, float ni_over_no, glm::vec3& refracted) {
+    glm::vec3 unit_v = glm::normalize(v);
+    float cos_i = glm::dot(-unit_v, n);
+    float k = 1.0f - ni_over_no*ni_over_no*(1.0f - cos_i*cos_i);
+    if (k<0){
+        return false;
+    }
+    refracted = (unit_v+ (glm::dot(-unit_v,n))*n)*ni_over_no -n*(sqrt(k));
+    return true;
+}
 
 class material{
 public:
@@ -72,6 +113,33 @@ public:
     glm::vec3 albedo;
 };
 
+//glass refracts
+class glass : public material{
+public:
+    glass(float ref_idx): ref_idx(ref_idx){};
+    virtual bool scatter(
+        const ray& r_in,
+        const hit_record& rec,
+        glm::vec3& attenuation,
+        ray& r_scattered
+    ) const override{
+    attenuation = glm::vec3(1.0, 1.0, 1.0);
+    glm::vec3 reflected = reflect(r_in.direction(),rec.normal);
+    float ni_over_no = rec.front_face ? 1.0f /ref_idx : ref_idx  ;
+    // glm::vec3 outward_normal = rec.front_face ? rec.normal : -rec.normal ;
+    glm::vec3 refracted;
+    if(refract_mit(r_in.direction(),rec.normal, ni_over_no, refracted)){
+        r_scattered = ray(rec.p, refracted );    
+        return true;
+    }
+    else{
+        r_scattered = ray(rec.p, reflected );
+        return false;
+    }
+    }
+
+    float ref_idx;
+};
 
 // depth? how many bounces are still allowed
 glm::vec3 color(const ray& r, hitable* world , int depth){
@@ -115,7 +183,7 @@ glm::vec3 color(const ray& r, hitable* world , int depth){
 
 
 int main(){
-    std::ofstream outFile("outputs/metal.ppm", std::ios::out);
+    std::ofstream outFile("outputs/glass.ppm", std::ios::out);
 
     int nx = 400;
     int ny = 200;
@@ -126,7 +194,7 @@ int main(){
     list[0]= new sphere(glm::vec3(0,0,-1),0.5 , new lambertian(glm::vec3(0.8,0.3,0.3)));
     list[1]= new sphere(glm::vec3(0,-100.5,-1),100, new lambertian(glm::vec3(0.8,0.8,0.0)));
     list[2]= new sphere(glm::vec3(1,0,-1),0.5, new metal(glm::vec3(0.8,0.6,0.2)));
-    list[3]= new sphere(glm::vec3(-1,0,-1),0.5, new metal(glm::vec3(0.8,0.8,0.8)));
+    list[3]= new sphere(glm::vec3(-1,0,-1),0.5, new glass(1.5));
 
 
     hitable* world = new hitable_list(list,4);
