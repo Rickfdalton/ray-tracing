@@ -5,11 +5,12 @@
 /*
 this class implements the abstract class hitable
 */
+
 class sphere: public hitable
 {
 public:
     sphere() {};
-    sphere(glm::vec3 center, float radius, material* material_ptr): center(center), radius(radius),material_ptr(material_ptr) {};
+    sphere(glm::vec3 center, float radius, std::shared_ptr<material>  material_ptr): center(center), radius(radius),material_ptr(material_ptr) {};
     virtual bool hit(const ray &r, float t_min, float t_max, hit_record &rec) const override{
         /*
         for those points present in ray and in the sphere.
@@ -46,7 +47,7 @@ public:
     }
     glm::vec3 center;
     float radius;
-    material* material_ptr;
+    std::shared_ptr<material> material_ptr;
 };
 
 

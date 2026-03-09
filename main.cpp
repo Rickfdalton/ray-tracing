@@ -69,6 +69,16 @@ bool refract_mit(const glm::vec3& v, const glm::vec3& n, float ni_over_no, glm::
     return true;
 }
 
+/*schlick approximation
+in glass materials some rays do reflect at the surface. we should model this.
+when the incident angle increases, the probability of reflecting increases.*/
+float schlick(float cosine, float ref_idx){
+    float r0 = (1-ref_idx)/(1+ref_idx);
+    r0 = r0 * r0;
+    return r0 + (1-r0)*pow((1-cosine),5);
+}
+
+
 class material{
 public:
     virtual bool scatter(
@@ -129,16 +139,23 @@ public:
     attenuation = glm::vec3(1.0, 1.0, 1.0);
     glm::vec3 reflected = reflect(r_in.direction(),rec.normal);
     float ni_over_no = rec.front_face ? 1.0f /ref_idx : ref_idx  ;
+    float cosine = dot(-glm::normalize(r_in.direction()),rec.normal); 
+    float reflect_prob;
     // glm::vec3 outward_normal = rec.front_face ? rec.normal : -rec.normal ;
     glm::vec3 refracted;
-    if(refract_geo(r_in.direction(),rec.normal, ni_over_no, refracted)){
-        r_scattered = ray(rec.p, refracted );    
-        return true;
+    if(refract_mit(r_in.direction(),rec.normal, ni_over_no, refracted)){
+        reflect_prob = schlick(cosine, ref_idx);
     }
     else{
-        r_scattered = ray(rec.p, reflected );
-        return false;
+        reflect_prob = 1.0f;
     }
+    if (drand48() < reflect_prob){
+        r_scattered = ray(rec.p, reflected );
+
+    }else{
+        r_scattered = ray(rec.p, refracted );
+    }
+    return true;
     }
 
     float ref_idx;
@@ -147,7 +164,7 @@ public:
 // depth? how many bounces are still allowed
 glm::vec3 color(const ray& r, hitable* world , int depth){
     hit_record rec;
-    if (world->hit(r,0.00000001f,MAXFLOAT,rec)){
+    if (world->hit(r,0.0001f,MAXFLOAT,rec)){
         //1. calculate diffuse shading : direct lighting, no re emitting
 
         /*glm::vec3 object_color(0.3f,0.9f,0.3f);
@@ -186,21 +203,21 @@ glm::vec3 color(const ray& r, hitable* world , int depth){
 
 
 int main(){
-    std::ofstream outFile("outputs/glass_geometrical_try.ppm", std::ios::out);
+    std::ofstream outFile("outputs/glass_schlick.ppm", std::ios::out);
 
     int nx = 400;
     int ny = 200;
     int ns = 200;
     outFile << "P3\n" << nx << " " <<ny << "\n255\n";
 
-    hitable* list[4];
-    list[0]= new sphere(glm::vec3(0,0,-1),0.5 , new lambertian(glm::vec3(0.8,0.3,0.3)));
-    list[1]= new sphere(glm::vec3(0,-100.5,-1),100, new lambertian(glm::vec3(0.8,0.8,0.0)));
-    list[2]= new sphere(glm::vec3(1,0,-1),0.5, new metal(glm::vec3(0.8,0.6,0.2)));
-    list[3]= new sphere(glm::vec3(-1,0,-1),0.5, new glass(1.5));
+    hitable* list[5];
+    list[0]= new sphere(glm::vec3(0,0,-1),0.5 , std::shared_ptr<material>(new lambertian(glm::vec3(0.8,0.3,0.3))));
+    list[1]= new sphere(glm::vec3(0,-100.5,-1),100, std::shared_ptr<material>(new lambertian(glm::vec3(0.8,0.8,0.0))));
+    list[2]= new sphere(glm::vec3(1,0,-1),0.5, std::shared_ptr<material>(new metal(glm::vec3(0.8,0.6,0.2))));
+    list[3]= new sphere(glm::vec3(-1,0,-1),0.5, std::shared_ptr<material>(new glass(1.5)));
+    list[4]= new sphere(glm::vec3(-1,0,-1),-0.45, std::shared_ptr<material>(new glass(1.5)));
 
-
-    hitable* world = new hitable_list(list,4);
+    hitable* world = new hitable_list(list,5);
 
     camera cam;
 
@@ -223,5 +240,13 @@ int main(){
             outFile << ir << " " << ig << " " << ib << "\n";
         }
     }
+
+    //free memory
+    delete world;
+    for(int i=0;i<5;i++){
+        delete list[i];
+    }
+
+
     outFile.close();
 }

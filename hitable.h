@@ -11,7 +11,7 @@ struct hit_record {
     glm::vec3 p;
     glm::vec3 normal;
     bool front_face;
-    material *mat_ptr;
+    std::shared_ptr<material>  mat_ptr;
 
 
     void set_face_normal(const ray& r, glm::vec3 outward_normal){
@@ -34,6 +34,7 @@ struct hit_record {
 class hitable{
     public:
         virtual bool hit(const ray &r, float t_min, float t_max, hit_record &rec) const=0;
+        virtual ~hitable() = default;
 };
 
 #endif
