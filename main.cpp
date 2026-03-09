@@ -34,22 +34,25 @@ glm::vec3 reflect(glm::vec3& v, glm::vec3& n){
 idea : this implemetation is not ray decomposition, this is geometry
 this result in numerical instability and black spots
 */
-// glm::vec3 refract(const glm::vec3& v, const glm::vec3& n, float ni_over_no) {
-//     glm::vec3 unit_v = glm::normalize(v);
-//     float cos_i = glm::dot(-unit_v, n);
-//     float sin_i = sqrt(1.0f - cos_i * cos_i);
-//     float sin_o = sin_i * ni_over_no;
+bool refract_geo(const glm::vec3& v, const glm::vec3& n, float ni_over_no, glm::vec3& refracted) {
+    glm::vec3 unit_v = glm::normalize(v);
+    float cos_i = glm::dot(-unit_v, n);
+    float sin_i = sqrt(1.0f - cos_i * cos_i);
+    float sin_o = sin_i * ni_over_no;
 
-//     if (sin_o >= 1.0f)
-//         return reflect(unit_v, n);  // TIR
+    if (sin_o >= 1.0f)
+        return false;  // TIR
 
-//     if (sin_o < 1e-6f)
-//         return unit_v;
+    if (sin_o < 1e-2f){
+        refracted = unit_v;
+        return true;
+    }
 
-//     float cos_o = sqrt(1.0f - sin_o * sin_o);
-//     float scale = (sin_i * cos_o - cos_i * sin_o) / sin_o;  // sin(i-o)/sin(o)
-//     return unit_v + scale * (-n);
-// }
+    float cos_o = sqrt(1.0f - sin_o * sin_o);
+    float scale = (sin_i * cos_o - cos_i * sin_o) / sin_o;  // sin(i-o)/sin(o)
+    refracted = unit_v + scale * (-n);
+    return true;
+}
 
 /*
 now we decompose incident ray
@@ -128,7 +131,7 @@ public:
     float ni_over_no = rec.front_face ? 1.0f /ref_idx : ref_idx  ;
     // glm::vec3 outward_normal = rec.front_face ? rec.normal : -rec.normal ;
     glm::vec3 refracted;
-    if(refract_mit(r_in.direction(),rec.normal, ni_over_no, refracted)){
+    if(refract_geo(r_in.direction(),rec.normal, ni_over_no, refracted)){
         r_scattered = ray(rec.p, refracted );    
         return true;
     }
@@ -183,11 +186,11 @@ glm::vec3 color(const ray& r, hitable* world , int depth){
 
 
 int main(){
-    std::ofstream outFile("outputs/glass.ppm", std::ios::out);
+    std::ofstream outFile("outputs/glass_geometrical_try.ppm", std::ios::out);
 
     int nx = 400;
     int ny = 200;
-    int ns = 100;
+    int ns = 200;
     outFile << "P3\n" << nx << " " <<ny << "\n255\n";
 
     hitable* list[4];
