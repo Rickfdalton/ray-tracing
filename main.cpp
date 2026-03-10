@@ -203,11 +203,11 @@ glm::vec3 color(const ray& r, hitable* world , int depth){
 
 
 int main(){
-    std::ofstream outFile("outputs/glass_schlick.ppm", std::ios::out);
+    std::ofstream outFile("outputs/camera_fov.ppm", std::ios::out);
 
-    int nx = 400;
-    int ny = 200;
-    int ns = 200;
+    int nx = 800;
+    int ny = 400;
+    int ns = 400;
     outFile << "P3\n" << nx << " " <<ny << "\n255\n";
 
     hitable* list[5];
@@ -219,7 +219,7 @@ int main(){
 
     hitable* world = new hitable_list(list,5);
 
-    camera cam;
+    camera cam(glm::vec3(-2,2,1),glm::vec3(0,0,-1),glm::vec3(0,1,0),90.0, 2.0);
 
     for (int j=ny-1 ; j >= 0; j--){
         for (int i=0; i< nx ; i++){
