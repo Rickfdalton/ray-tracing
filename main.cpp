@@ -203,7 +203,7 @@ glm::vec3 color(const ray& r, hitable* world , int depth){
 
 
 int main(){
-    std::ofstream outFile("outputs/camera_fov.ppm", std::ios::out);
+    std::ofstream outFile("outputs/defocus_blur.ppm", std::ios::out);
 
     int nx = 800;
     int ny = 400;
@@ -218,8 +218,12 @@ int main(){
     list[4]= new sphere(glm::vec3(-1,0,-1),-0.45, std::shared_ptr<material>(new glass(1.5)));
 
     hitable* world = new hitable_list(list,5);
+    glm::vec3 lookfrom(3,3,2);
+    glm::vec3 lookat(0,0,-1);
+    float distance_to_focal = glm::length(lookat-lookfrom);
+    float aperture = 2.0f;
 
-    camera cam(glm::vec3(-2,2,1),glm::vec3(0,0,-1),glm::vec3(0,1,0),90.0, 2.0);
+    camera cam(lookfrom,lookat,glm::vec3(0,1,0),60.0f, nx/float(ny), distance_to_focal,aperture);
 
     for (int j=ny-1 ; j >= 0; j--){
         for (int i=0; i< nx ; i++){
