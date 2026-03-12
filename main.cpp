@@ -11,7 +11,6 @@ ray tracing
 #include "camera.h"
 
 
-
 //get random point in a sphere with O as origin
 glm::vec3 get_random_in_unit_sphere(){
     glm::vec3 p;
@@ -22,7 +21,7 @@ glm::vec3 get_random_in_unit_sphere(){
 }
 
 //get the reflected vector
-glm::vec3 reflect(glm::vec3& v, glm::vec3& n){
+glm::vec3 reflect(const glm::vec3& v, const glm::vec3& n){
     return v + 2.0f *(glm::dot(-v,n)*n);
 }
 
@@ -200,28 +199,63 @@ glm::vec3 color(const ray& r, hitable* world , int depth){
 }
 
 
+hitable_list* scene(hitable** list, int& i){
 
+    //earth or big sphere
+    list[i++]= new sphere(glm::vec3(0,-1000.0,0),1000, std::shared_ptr<material>(new lambertian(glm::vec3(0.5,0.5,0.5))));
+    for(int a= -11; a<11; a++){ // x axis spread
+        for(int b=-11;b<11;b++){ // z axis spread
+            glm::vec3 center(a+0.9*drand48(),0.2,b+0.9*drand48());// small spheres with 0.2 radius
+            float choose_mat = drand48();
+
+            if(glm::length(center- glm::vec3(4,0.2,0)) > 0.9){ // prevent small balls inside big balls
+
+                if (choose_mat < 0.8) {
+                    //create 80% of diffuse materials
+                    list[i++] = new sphere(center, 0.2, std::shared_ptr<material> (new lambertian(glm::vec3(drand48()*drand48(),drand48()*drand48(),drand48()*drand48()))));//more darker as it absorb light
+                }
+                else if (choose_mat < 0.95)
+                {
+                    //create 15% metal
+                    list[i++] = new sphere(center, 0.2, std::shared_ptr<material> (new metal(glm::vec3(0.5*(drand48()+1),0.5*(drand48()+1),0.5*(drand48()+1))))); // more brigther
+
+                }else{
+                    //5% glass
+                    list[i++] = new sphere(center, 0.2, std::shared_ptr<material> (new glass(1.5f))); // more brigther
+                }
+                
+            }
+        }
+    }
+    list[i++] = new sphere(glm::vec3(0,1,0),1.0,std::shared_ptr<material> (new glass(1.5)));
+    list[i++] = new sphere(glm::vec3(-4,1,0),1.0,std::shared_ptr<material> (new lambertian(glm::vec3(0.4,0.2,0.1))));
+    list[i++] = new sphere(glm::vec3(4,1,0),1.0,std::shared_ptr<material> (new metal(glm::vec3(0.7,0.6,0.5))));
+    return new hitable_list(list, i);
+}
 
 int main(){
-    std::ofstream outFile("outputs/defocus_blur.ppm", std::ios::out);
+    std::ofstream outFile("outputs/full_scene.ppm", std::ios::out);
 
-    int nx = 800;
-    int ny = 400;
-    int ns = 400;
+    int nx = 600;
+    int ny = 300;
+    int ns = 200;
     outFile << "P3\n" << nx << " " <<ny << "\n255\n";
 
-    hitable* list[5];
-    list[0]= new sphere(glm::vec3(0,0,-1),0.5 , std::shared_ptr<material>(new lambertian(glm::vec3(0.8,0.3,0.3))));
-    list[1]= new sphere(glm::vec3(0,-100.5,-1),100, std::shared_ptr<material>(new lambertian(glm::vec3(0.8,0.8,0.0))));
-    list[2]= new sphere(glm::vec3(1,0,-1),0.5, std::shared_ptr<material>(new metal(glm::vec3(0.8,0.6,0.2))));
-    list[3]= new sphere(glm::vec3(-1,0,-1),0.5, std::shared_ptr<material>(new glass(1.5)));
-    list[4]= new sphere(glm::vec3(-1,0,-1),-0.45, std::shared_ptr<material>(new glass(1.5)));
+    // hitable* list[5];
+    // list[0]= new sphere(glm::vec3(0,0,-1),0.5 , std::shared_ptr<material>(new lambertian(glm::vec3(0.8,0.3,0.3))));
+    // list[1]= new sphere(glm::vec3(0,-100.5,-1),100, std::shared_ptr<material>(new lambertian(glm::vec3(0.8,0.8,0.0))));
+    // list[2]= new sphere(glm::vec3(1,0,-1),0.5, std::shared_ptr<material>(new metal(glm::vec3(0.8,0.6,0.2))));
+    // list[3]= new sphere(glm::vec3(-1,0,-1),0.5, std::shared_ptr<material>(new glass(1.5)));
+    // list[4]= new sphere(glm::vec3(-1,0,-1),-0.45, std::shared_ptr<material>(new glass(1.5)));
+    
+    hitable* list[501]={};
+    int count =0;
+    hitable_list* world= scene(list, count);
 
-    hitable* world = new hitable_list(list,5);
-    glm::vec3 lookfrom(3,3,2);
-    glm::vec3 lookat(0,0,-1);
+    glm::vec3 lookfrom(8,2,3);
+    glm::vec3 lookat(0,0,0);
     float distance_to_focal = glm::length(lookat-lookfrom);
-    float aperture = 2.0f;
+    float aperture = 0.1f;
 
     camera cam(lookfrom,lookat,glm::vec3(0,1,0),60.0f, nx/float(ny), distance_to_focal,aperture);
 
@@ -247,10 +281,9 @@ int main(){
 
     //free memory
     delete world;
-    for(int i=0;i<5;i++){
+    for(int i=0;i<count;i++){
         delete list[i];
     }
-
 
     outFile.close();
 }
