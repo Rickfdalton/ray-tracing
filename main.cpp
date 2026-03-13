@@ -5,17 +5,17 @@ ray tracing
 #include <fstream>
 #include <cmath>
 #include <glm/glm.hpp>
+#include <vector>
 #include "ray.h"
 #include "sphere.h"
 #include "hitablelist.h"
 #include "camera.h"
 
-
 //get random point in a sphere with O as origin
 glm::vec3 get_random_in_unit_sphere(){
     glm::vec3 p;
     do {
-        p = 2.0f * glm::vec3(drand48(),drand48(),drand48()) - glm::vec3(1.0,1.0,1.0);
+        p = 2.0f * glm::vec3(random_float(),random_float(),random_float()) - glm::vec3(1.0,1.0,1.0);
     }while(glm::length(p) >= 1);
     return p;
 }
@@ -148,7 +148,7 @@ public:
     else{
         reflect_prob = 1.0f;
     }
-    if (drand48() < reflect_prob){
+    if (random_float() < reflect_prob){
         r_scattered = ray(rec.p, reflected );
 
     }else{
@@ -205,19 +205,19 @@ hitable_list* scene(hitable** list, int& i){
     list[i++]= new sphere(glm::vec3(0,-1000.0,0),1000, std::shared_ptr<material>(new lambertian(glm::vec3(0.5,0.5,0.5))));
     for(int a= -11; a<11; a++){ // x axis spread
         for(int b=-11;b<11;b++){ // z axis spread
-            glm::vec3 center(a+0.9*drand48(),0.2,b+0.9*drand48());// small spheres with 0.2 radius
-            float choose_mat = drand48();
+            glm::vec3 center(a+0.9*random_float(),0.2,b+0.9*random_float());// small spheres with 0.2 radius
+            float choose_mat = random_float();
 
             if(glm::length(center- glm::vec3(4,0.2,0)) > 0.9){ // prevent small balls inside big balls
 
                 if (choose_mat < 0.8) {
                     //create 80% of diffuse materials
-                    list[i++] = new sphere(center, 0.2, std::shared_ptr<material> (new lambertian(glm::vec3(drand48()*drand48(),drand48()*drand48(),drand48()*drand48()))));//more darker as it absorb light
+                    list[i++] = new sphere(center, 0.2, std::shared_ptr<material> (new lambertian(glm::vec3(random_float()*random_float(),random_float()*random_float(),random_float()*random_float()))));//more darker as it absorb light
                 }
                 else if (choose_mat < 0.95)
                 {
                     //create 15% metal
-                    list[i++] = new sphere(center, 0.2, std::shared_ptr<material> (new metal(glm::vec3(0.5*(drand48()+1),0.5*(drand48()+1),0.5*(drand48()+1))))); // more brigther
+                    list[i++] = new sphere(center, 0.2, std::shared_ptr<material> (new metal(glm::vec3(0.5*(random_float()+1),0.5*(random_float()+1),0.5*(random_float()+1))))); // more brigther
 
                 }else{
                     //5% glass
@@ -259,23 +259,34 @@ int main(){
 
     camera cam(lookfrom,lookat,glm::vec3(0,1,0),60.0f, nx/float(ny), distance_to_focal,aperture);
 
+    std::vector<glm::vec3> framebuffer(nx * ny);
+
+    #pragma omp parallel for // ENABLE THIS!
     for (int j=ny-1 ; j >= 0; j--){
+        if (j % 10 == 0) {
+            std::cerr << "\rProgress: " << (ny-j)*100/ny << "%" << std::flush;
+        }
         for (int i=0; i< nx ; i++){
-     
             glm::vec3 col(0.0,0.0,0.0);
             for (int s=0;s<ns;s++){
-                float u = float(i+drand48())/float(nx);
-                float v = float(j+drand48())/float(ny);
+                float u = float(i+random_float())/float(nx);
+                float v = float(j+random_float())/float(ny);
                 ray r = cam.get_ray(u,v);
                 col+=color(r,world,0);
             }
             col/=float(ns);
             col= glm::vec3(sqrt(col.x),sqrt(col.y),sqrt(col.z));
-      
-            int ir = static_cast<int>(255 * col[0]);
-            int ig = static_cast<int>(255 * col[1]);
-            int ib = static_cast<int>(255 * col[2]);
-            outFile << ir << " " << ig << " " << ib << "\n";
+            framebuffer[j * nx + i] = col;
+        }
+    }
+    std::cerr << "\nWriting to file...\n";
+
+    for (int j = ny-1; j >= 0; j--) {
+        for (int i = 0; i < nx; i++) {
+            glm::vec3 col = framebuffer[j * nx + i];
+            outFile << static_cast<int>(255 * col[0]) << " "
+                    << static_cast<int>(255 * col[1]) << " "
+                    << static_cast<int>(255 * col[2]) << "\n";
         }
     }
 

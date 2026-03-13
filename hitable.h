@@ -2,6 +2,7 @@
 #define HITABLE_H_
 
 #include <glm/glm.hpp>
+#include <memory>
 #include "ray.h"
 
 class material;

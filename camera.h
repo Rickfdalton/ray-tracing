@@ -1,7 +1,10 @@
 #ifndef CAMERA_H_
 #define CAMERA_H_
 #include <cmath>
+#include <omp.h>
 #include "ray.h"
+#include "random.h"
+
 
 class camera{
 public:
@@ -26,7 +29,7 @@ public:
         //pick random point on disk
          glm::vec3 rd ;
          do{
-            rd = origin + (2.0f*float(drand48())-1.0f)*lens_radius*cam_right + (2.0f*float(drand48())-1.0f)*lens_radius*cam_up;
+            rd = origin + (2.0f*float(random_float())-1.0f)*lens_radius*cam_right + (2.0f*float(random_float())-1.0f)*lens_radius*cam_up;
          }while(glm::length(rd-origin) > lens_radius);
 
          glm::vec3 direction = lower_left_corner + u*horizontal + v*vertical - rd;
