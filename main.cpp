@@ -261,23 +261,29 @@ int main(){
 
     std::vector<glm::vec3> framebuffer(nx * ny);
 
-    #pragma omp parallel for // ENABLE THIS!
-    for (int j=ny-1 ; j >= 0; j--){
-        if (j % 10 == 0) {
-            std::cerr << "\rProgress: " << (ny-j)*100/ny << "%" << std::flush;
-        }
+    #pragma omp parallel for schedule(dynamic, 1)
+    for (int j = ny-1; j >= 0; j--) {
+        auto t1 = std::chrono::high_resolution_clock::now();
+
         for (int i=0; i< nx ; i++){
             glm::vec3 col(0.0,0.0,0.0);
             for (int s=0;s<ns;s++){
                 float u = float(i+random_float())/float(nx);
                 float v = float(j+random_float())/float(ny);
                 ray r = cam.get_ray(u,v);
-                col+=color(r,world,0);
+                col += color(r,world,0);
             }
-            col/=float(ns);
-            col= glm::vec3(sqrt(col.x),sqrt(col.y),sqrt(col.z));
+            col /= float(ns);
+            col = glm::vec3(sqrt(col.x), sqrt(col.y), sqrt(col.z));
             framebuffer[j * nx + i] = col;
         }
+
+        auto t2 = std::chrono::high_resolution_clock::now();
+        #pragma omp critical
+        std::cerr << "Thread " << omp_get_thread_num() 
+                << " row " << j 
+                << " time: " << std::chrono::duration<double>(t2-t1).count() 
+                << " sec\n";
     }
     std::cerr << "\nWriting to file...\n";
 
