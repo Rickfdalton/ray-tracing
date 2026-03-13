@@ -236,8 +236,8 @@ hitable_list* scene(hitable** list, int& i){
 int main(){
     std::ofstream outFile("outputs/full_scene.ppm", std::ios::out);
 
-    int nx = 600;
-    int ny = 300;
+    int nx = 800;
+    int ny = 400;
     int ns = 200;
     outFile << "P3\n" << nx << " " <<ny << "\n255\n";
 
