@@ -1,10 +1,17 @@
 implementing Ray tracing from scratch in c++.
 
-final scene:
-<img width="865" height="431" alt="Screenshot 2026-03-12 at 15 14 12" src="https://github.com/user-attachments/assets/d6e37779-923f-413d-ad92-faeac21cfc95" />
+## current: full scene (motion blur)
+<img width="500" alt="full scene" src="outputs/thumbnails/full_scene.png" />
 
+## progress
 
+| | | |
+|---|---|---|
+| **hittable spheres** <br> <img width="220" src="outputs/thumbnails/hittable.png" /> | **diffuse (monte carlo)** <br> <img width="220" src="outputs/thumbnails/diffuse.png" /> | **matte / gamma correction** <br> <img width="220" src="outputs/thumbnails/matte.png" /> |
+| **lambertian material** <br> <img width="220" src="outputs/thumbnails/lambertian.png" /> | **metal material** <br> <img width="220" src="outputs/thumbnails/metal.png" /> | **glass / refraction** <br> <img width="220" src="outputs/thumbnails/glass.png" /> |
+| **geometric refraction** <br> <img width="220" src="outputs/thumbnails/glass_geometrical_try.png" /> | **schlick approximation** <br> <img width="220" src="outputs/thumbnails/glass_schlick.png" /> | **camera fov** <br> <img width="220" src="outputs/thumbnails/camera_fov.png" /> |
+| **defocus blur** <br> <img width="220" src="outputs/thumbnails/defocus_blur.png" /> | | |
 
-check outputs directory for the ray tracing progress.
+check the `outputs/` directory for the full-resolution `.ppm` renders.
 
 [1] https://www.realtimerendering.com/raytracing/Ray%20Tracing%20in%20a%20Weekend.pdf
