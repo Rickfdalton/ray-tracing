@@ -99,7 +99,7 @@ public:
         ray& r_scattered
     ) const override {
         glm::vec3 target = rec.p + rec.normal + get_random_in_unit_sphere();
-        r_scattered = ray(rec.p, target-rec.p);
+        r_scattered = ray(rec.p, target-rec.p, r_in.time());
         attenuation = albedo;
         return true;
     }
@@ -117,7 +117,7 @@ public:
         glm::vec3& attenuation,
         ray& r_scattered
     ) const override {
-        r_scattered = ray(rec.p, reflect(glm::normalize(r_in.direction()), rec.normal));
+        r_scattered = ray(rec.p, reflect(glm::normalize(r_in.direction()), rec.normal), r_in.time());
         attenuation= albedo;
         return (glm::dot(r_scattered.direction(),rec.normal)>0);
     }
@@ -149,10 +149,10 @@ public:
         reflect_prob = 1.0f;
     }
     if (drand48() < reflect_prob){
-        r_scattered = ray(rec.p, reflected );
+        r_scattered = ray(rec.p, reflected , r_in.time());
 
     }else{
-        r_scattered = ray(rec.p, refracted );
+        r_scattered = ray(rec.p, refracted , r_in.time());
     }
     return true;
     }
@@ -212,7 +212,7 @@ hitable_list* scene(hitable** list, int& i){
 
                 if (choose_mat < 0.8) {
                     //create 80% of diffuse materials
-                    list[i++] = new sphere(center, 0.2, std::shared_ptr<material> (new lambertian(glm::vec3(drand48()*drand48(),drand48()*drand48(),drand48()*drand48()))));//more darker as it absorb light
+                    list[i++] = new sphere(center,center+glm::vec3(0,0.5*drand48(),0), 0.2, std::shared_ptr<material> (new lambertian(glm::vec3(drand48()*drand48(),drand48()*drand48(),drand48()*drand48()))));//more darker as it absorb light
                 }
                 else if (choose_mat < 0.95)
                 {

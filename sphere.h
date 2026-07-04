@@ -10,13 +10,18 @@ class sphere: public hitable
 {
 public:
     sphere() {};
-    sphere(glm::vec3 center, float radius, std::shared_ptr<material>  material_ptr): center(center), radius(radius),material_ptr(material_ptr) {};
+    //stationary sphere
+    sphere(glm::vec3 center, float radius, std::shared_ptr<material>  material_ptr): center(center,glm::vec3(0)), radius(radius),material_ptr(material_ptr) {};
+    //moving sphere
+    sphere(glm::vec3 center1,glm::vec3 center2, float radius, std::shared_ptr<material>  material_ptr): center(center1,center2-center1), radius(radius),material_ptr(material_ptr) {};
+
     virtual bool hit(const ray &r, float t_min, float t_max, hit_record &rec) const override{
         /*
         for those points present in ray and in the sphere.
         t*t*dot(B, B) + 2*t*dot(B,A-C) + dot(A-C,A-C) - R*R = 0
         */
-        glm::vec3 oc = r.origin() - center;
+        glm::vec3 curr_center = center.point_at_param(r.time());
+        glm::vec3 oc = r.origin() - curr_center;
         float a = glm::dot(r.direction(),r.direction());
         float b = 2* glm::dot(r.direction(),oc);
         float c = glm::dot(oc,oc) - radius * radius;
@@ -26,7 +31,7 @@ public:
             if (temp > t_min && temp < t_max){
                 rec.t = temp;
                 rec.p = r.point_at_param(temp);
-                glm::vec3 out_normal = (rec.p - center)/radius;
+                glm::vec3 out_normal = (rec.p - curr_center)/radius;
                 rec.set_face_normal(r,out_normal);
                 rec.mat_ptr = material_ptr;
                 return true;
@@ -35,7 +40,7 @@ public:
             if (temp > t_min && temp < t_max){
                 rec.t = temp;
                 rec.p = r.point_at_param(temp);
-                glm::vec3 out_normal = (rec.p - center)/radius;
+                glm::vec3 out_normal = (rec.p - curr_center)/radius;
                 rec.set_face_normal(r,out_normal);
                 rec.mat_ptr = material_ptr;
 
@@ -45,7 +50,7 @@ public:
         return false;
 
     }
-    glm::vec3 center;
+    ray center; // we use center as a ray since it is moving
     float radius;
     std::shared_ptr<material> material_ptr;
 };

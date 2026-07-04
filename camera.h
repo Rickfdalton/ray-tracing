@@ -30,7 +30,7 @@ public:
          }while(glm::length(rd-origin) > lens_radius);
 
          glm::vec3 direction = lower_left_corner + u*horizontal + v*vertical - rd;
-        return ray(rd,direction);
+        return ray(rd,direction,drand48()); // launch ray in random time
     }
 
     glm::vec3 lower_left_corner;
