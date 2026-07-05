@@ -199,10 +199,10 @@ glm::vec3 color(const ray& r, hitable* world , int depth){
 }
 
 
-hitable_list* scene(hitable** list, int& i){
-
+hitable_list scene(){
+    hitable_list world;
     //earth or big sphere
-    list[i++]= new sphere(glm::vec3(0,-1000.0,0),1000, std::shared_ptr<material>(new lambertian(glm::vec3(0.5,0.5,0.5))));
+    world.add(std::make_shared<sphere>(glm::vec3(0,-1000.0,0),1000, std::shared_ptr<material>(new lambertian(glm::vec3(0.5,0.5,0.5)))));
     for(int a= -11; a<11; a++){ // x axis spread
         for(int b=-11;b<11;b++){ // z axis spread
             glm::vec3 center(a+0.9*drand48(),0.2,b+0.9*drand48());// small spheres with 0.2 radius
@@ -212,25 +212,25 @@ hitable_list* scene(hitable** list, int& i){
 
                 if (choose_mat < 0.8) {
                     //create 80% of diffuse materials
-                    list[i++] = new sphere(center,center+glm::vec3(0,0.5*drand48(),0), 0.2, std::shared_ptr<material> (new lambertian(glm::vec3(drand48()*drand48(),drand48()*drand48(),drand48()*drand48()))));//more darker as it absorb light
+                    world.add(std::make_shared<sphere>(center,center+glm::vec3(0,0.5*drand48(),0), 0.2, std::shared_ptr<material> (new lambertian(glm::vec3(drand48()*drand48(),drand48()*drand48(),drand48()*drand48())))));//more darker as it absorb light
                 }
                 else if (choose_mat < 0.95)
                 {
                     //create 15% metal
-                    list[i++] = new sphere(center, 0.2, std::shared_ptr<material> (new metal(glm::vec3(0.5*(drand48()+1),0.5*(drand48()+1),0.5*(drand48()+1))))); // more brigther
+                    world.add(std::make_shared<sphere>(center, 0.2, std::shared_ptr<material> (new metal(glm::vec3(0.5*(drand48()+1),0.5*(drand48()+1),0.5*(drand48()+1)))))); // more brigther
 
                 }else{
                     //5% glass
-                    list[i++] = new sphere(center, 0.2, std::shared_ptr<material> (new glass(1.5f))); // more brigther
+                    world.add(std::make_shared<sphere>(center, 0.2, std::shared_ptr<material> (new glass(1.5f)))); // more brigther
                 }
-                
+
             }
         }
     }
-    list[i++] = new sphere(glm::vec3(0,1,0),1.0,std::shared_ptr<material> (new glass(1.5)));
-    list[i++] = new sphere(glm::vec3(-4,1,0),1.0,std::shared_ptr<material> (new lambertian(glm::vec3(0.4,0.2,0.1))));
-    list[i++] = new sphere(glm::vec3(4,1,0),1.0,std::shared_ptr<material> (new metal(glm::vec3(0.7,0.6,0.5))));
-    return new hitable_list(list, i);
+    world.add(std::make_shared<sphere>(glm::vec3(0,1,0),1.0,std::shared_ptr<material> (new glass(1.5))));
+    world.add(std::make_shared<sphere>(glm::vec3(-4,1,0),1.0,std::shared_ptr<material> (new lambertian(glm::vec3(0.4,0.2,0.1)))));
+    world.add(std::make_shared<sphere>(glm::vec3(4,1,0),1.0,std::shared_ptr<material> (new metal(glm::vec3(0.7,0.6,0.5)))));
+    return world;
 }
 
 int main(){
@@ -241,16 +241,14 @@ int main(){
     int ns = 200;
     outFile << "P3\n" << nx << " " <<ny << "\n255\n";
 
-    // hitable* list[5];
-    // list[0]= new sphere(glm::vec3(0,0,-1),0.5 , std::shared_ptr<material>(new lambertian(glm::vec3(0.8,0.3,0.3))));
-    // list[1]= new sphere(glm::vec3(0,-100.5,-1),100, std::shared_ptr<material>(new lambertian(glm::vec3(0.8,0.8,0.0))));
-    // list[2]= new sphere(glm::vec3(1,0,-1),0.5, std::shared_ptr<material>(new metal(glm::vec3(0.8,0.6,0.2))));
-    // list[3]= new sphere(glm::vec3(-1,0,-1),0.5, std::shared_ptr<material>(new glass(1.5)));
-    // list[4]= new sphere(glm::vec3(-1,0,-1),-0.45, std::shared_ptr<material>(new glass(1.5)));
-    
-    hitable* list[501]={};
-    int count =0;
-    hitable_list* world= scene(list, count);
+    // hitable_list world;
+    // world.add(std::make_shared<sphere>(glm::vec3(0,0,-1),0.5 , std::shared_ptr<material>(new lambertian(glm::vec3(0.8,0.3,0.3)))));
+    // world.add(std::make_shared<sphere>(glm::vec3(0,-100.5,-1),100, std::shared_ptr<material>(new lambertian(glm::vec3(0.8,0.8,0.0)))));
+    // world.add(std::make_shared<sphere>(glm::vec3(1,0,-1),0.5, std::shared_ptr<material>(new metal(glm::vec3(0.8,0.6,0.2)))));
+    // world.add(std::make_shared<sphere>(glm::vec3(-1,0,-1),0.5, std::shared_ptr<material>(new glass(1.5))));
+    // world.add(std::make_shared<sphere>(glm::vec3(-1,0,-1),-0.45, std::shared_ptr<material>(new glass(1.5))));
+
+    hitable_list world = scene();
 
     glm::vec3 lookfrom(8,2,3);
     glm::vec3 lookat(0,0,0);
@@ -267,7 +265,7 @@ int main(){
                 float u = float(i+drand48())/float(nx);
                 float v = float(j+drand48())/float(ny);
                 ray r = cam.get_ray(u,v);
-                col+=color(r,world,0);
+                col+=color(r,&world,0);
             }
             col/=float(ns);
             col= glm::vec3(sqrt(col.x),sqrt(col.y),sqrt(col.z));
@@ -277,12 +275,6 @@ int main(){
             int ib = static_cast<int>(255 * col[2]);
             outFile << ir << " " << ig << " " << ib << "\n";
         }
-    }
-
-    //free memory
-    delete world;
-    for(int i=0;i<count;i++){
-        delete list[i];
     }
 
     outFile.close();

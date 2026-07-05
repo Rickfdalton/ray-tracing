@@ -11,9 +11,15 @@ class sphere: public hitable
 public:
     sphere() {};
     //stationary sphere
-    sphere(glm::vec3 center, float radius, std::shared_ptr<material>  material_ptr): center(center,glm::vec3(0)), radius(radius),material_ptr(material_ptr) {};
+    sphere(glm::vec3 center, float radius, std::shared_ptr<material>  material_ptr): center(center,glm::vec3(0)), radius(radius),material_ptr(material_ptr) {
+        bbox = aabb(center - glm::vec3(radius,radius,radius),center + glm::vec3(radius,radius,radius));
+    };
     //moving sphere
-    sphere(glm::vec3 center1,glm::vec3 center2, float radius, std::shared_ptr<material>  material_ptr): center(center1,center2-center1), radius(radius),material_ptr(material_ptr) {};
+    sphere(glm::vec3 center1,glm::vec3 center2, float radius, std::shared_ptr<material>  material_ptr): center(center1,center2-center1), radius(radius),material_ptr(material_ptr) {
+        aabb bbox1(center1 - glm::vec3(radius,radius,radius),center1 + glm::vec3(radius,radius,radius));
+        aabb bbox2(center2 - glm::vec3(radius,radius,radius),center2 + glm::vec3(radius,radius,radius));
+        bbox= aabb(bbox1,bbox2);
+    };
 
     virtual bool hit(const ray &r, float t_min, float t_max, hit_record &rec) const override{
         /*
@@ -50,9 +56,15 @@ public:
         return false;
 
     }
+
+    aabb bounding_box() const override{
+        return bbox;
+    }
+private:
     ray center; // we use center as a ray since it is moving
     float radius;
     std::shared_ptr<material> material_ptr;
+    aabb bbox;
 };
 
 
