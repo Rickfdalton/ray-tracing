@@ -8,16 +8,16 @@
 
 class bvh_node: public hitable {
     public:
-        bvh_node(hitablelist list) : bvh_node(list.objects, 0, list.objects.size()){
+        bvh_node(hitable_list list) : bvh_node(list.list, 0, list.list.size()){
 
         }
 
-        bvh_node(std::vector<shared_ptr<hitable>>&objects, size_t start, size_t end){
+        bvh_node(std::vector<std::shared_ptr<hitable>>&objects, size_t start, size_t end){
             // this method to construct bvh.
             // we call from the large aabb and then recursively to small aabb
             int axis = rand()%3;
 
-            auto box_compare = [axis](const shared_ptr<hitable>&a, const shared_ptr<hitable>&b){
+            auto box_compare = [axis](const std::shared_ptr<hitable>&a, const std::shared_ptr<hitable>&b){
                 return a->bounding_box().axis_interval(axis).min < b->bounding_box().axis_interval(axis).min;
             };// we need lambda function coz comparator needs 2 parameters.
 
@@ -38,18 +38,18 @@ class bvh_node: public hitable {
             bbox= aabb(left->bounding_box(),right->bounding_box());
         }
 
-        bool hit(const ray&r, interval ray_t, hit_record& rec) const override{
-            if(!bbox.hit(r, ray_t)) return false;
-            bool hit_left = left->hit(r,ray_t,rec);
-            bool hit_right = right->hit(r,interval(ray_t.min, hit_left ? rec.t: ray_t.max),rec);
+        bool hit(const ray&r, float t_min, float t_max, hit_record& rec) const override{
+            if(!bbox.hit(r, interval(t_min, t_max))) return false;
+            bool hit_left = left->hit(r,t_min,t_max,rec);
+            bool hit_right = right->hit(r,t_min, hit_left ? rec.t: t_max,rec);
             return hit_left || hit_right;
         }
 
         aabb bounding_box() const override {return bbox;}
 
     private:
-        shared_ptr<hitable> left;
-        shared_ptr<hitable> right;
+        std::shared_ptr<hitable> left;
+        std::shared_ptr<hitable> right;
         aabb bbox;
 };
 

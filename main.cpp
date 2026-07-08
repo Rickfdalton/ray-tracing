@@ -9,6 +9,7 @@ ray tracing
 #include "sphere.h"
 #include "hitablelist.h"
 #include "camera.h"
+#include "bvh.h"
 
 
 //get random point in a sphere with O as origin
@@ -230,11 +231,12 @@ hitable_list scene(){
     world.add(std::make_shared<sphere>(glm::vec3(0,1,0),1.0,std::shared_ptr<material> (new glass(1.5))));
     world.add(std::make_shared<sphere>(glm::vec3(-4,1,0),1.0,std::shared_ptr<material> (new lambertian(glm::vec3(0.4,0.2,0.1)))));
     world.add(std::make_shared<sphere>(glm::vec3(4,1,0),1.0,std::shared_ptr<material> (new metal(glm::vec3(0.7,0.6,0.5)))));
+    world = hitable_list(std::make_shared<bvh_node>(world));
     return world;
 }
 
 int main(){
-    std::ofstream outFile("outputs/full_scene.ppm", std::ios::out);
+    std::ofstream outFile("outputs/full_scene_bvh.ppm", std::ios::out);
 
     int nx = 800;
     int ny = 400;

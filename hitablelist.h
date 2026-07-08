@@ -41,7 +41,6 @@ public:
         return bbox;
     }
 
-private:
     std::vector<std::shared_ptr<hitable>> list;
     aabb bbox;
 
