@@ -8,7 +8,7 @@
 
 class bvh_node: public hitable {
     public:
-        bvh_node(hittable_list list) : bvh_node(list.objects, 0, list.objects.size()){
+        bvh_node(hitablelist list) : bvh_node(list.objects, 0, list.objects.size()){
 
         }
 
@@ -48,8 +48,8 @@ class bvh_node: public hitable {
         aabb bounding_box() const override {return bbox;}
 
     private:
-        shared_ptr<hittable> left;
-        shared_ptr<hittable> right;
+        shared_ptr<hitable> left;
+        shared_ptr<hitable> right;
         aabb bbox;
 };
 
