@@ -4,6 +4,7 @@ ray tracing
 #include <iostream>
 #include <fstream>
 #include <cmath>
+#include <chrono>
 #include <glm/glm.hpp>
 #include "ray.h"
 #include "sphere.h"
@@ -240,7 +241,7 @@ int main(){
 
     int nx = 800;
     int ny = 400;
-    int ns = 200;
+    int ns = 1000;
     outFile << "P3\n" << nx << " " <<ny << "\n255\n";
 
     // hitable_list world;
@@ -258,6 +259,8 @@ int main(){
     float aperture = 0.1f;
 
     camera cam(lookfrom,lookat,glm::vec3(0,1,0),60.0f, nx/float(ny), distance_to_focal,aperture);
+
+    auto start_time = std::chrono::high_resolution_clock::now();
 
     for (int j=ny-1 ; j >= 0; j--){
         for (int i=0; i< nx ; i++){
@@ -280,4 +283,8 @@ int main(){
     }
 
     outFile.close();
+
+    auto end_time = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed = end_time - start_time;
+    std::cout << "Ray tracing took " << elapsed.count() << " seconds\n";
 }
