@@ -11,6 +11,7 @@ ray tracing
 #include "hitablelist.h"
 #include "camera.h"
 #include "bvh.h"
+#include "texture.h"
 
 
 //get random point in a sphere with O as origin
@@ -93,7 +94,9 @@ public:
 
 class lambertian : public material{
 public:
-    lambertian(const glm::vec3& a) : albedo(a){}
+    lambertian(const glm::vec3& a) : tex(std::make_shared<solid_color>(a)){}
+    lambertian(std::shared_ptr<texture> tex) : tex(tex){}
+
     virtual bool scatter(
         const ray& r_in,
         const hit_record& rec,
@@ -102,11 +105,11 @@ public:
     ) const override {
         glm::vec3 target = rec.p + rec.normal + get_random_in_unit_sphere();
         r_scattered = ray(rec.p, target-rec.p, r_in.time());
-        attenuation = albedo;
+        attenuation = tex->value(rec.u, rec.v, rec.p);
         return true;
     }
-
-    glm::vec3 albedo; //reflectivity
+private:
+    std::shared_ptr<texture> tex;
 };
 
 //metal reflects using the reflect formula not just scatters
@@ -204,7 +207,8 @@ glm::vec3 color(const ray& r, hitable* world , int depth){
 hitable_list scene(){
     hitable_list world;
     //earth or big sphere
-    world.add(std::make_shared<sphere>(glm::vec3(0,-1000.0,0),1000, std::shared_ptr<material>(new lambertian(glm::vec3(0.5,0.5,0.5)))));
+    auto checker = std::make_shared<checker_texture>(0.32f,glm::vec3(0.2f,0.3f,0.1f),glm::vec3(0.9f,0.9f,0.9f));
+    world.add(std::make_shared<sphere>(glm::vec3(0,-1000.0,0),1000,  std::make_shared<lambertian>(checker)));
     for(int a= -11; a<11; a++){ // x axis spread
         for(int b=-11;b<11;b++){ // z axis spread
             glm::vec3 center(a+0.9*drand48(),0.2,b+0.9*drand48());// small spheres with 0.2 radius
@@ -237,7 +241,7 @@ hitable_list scene(){
 }
 
 int main(){
-    std::ofstream outFile("outputs/full_scene_bvh_longaxis.ppm", std::ios::out);
+    std::ofstream outFile("outputs/checker_earth.ppm", std::ios::out);
 
     int nx = 800;
     int ny = 400;
