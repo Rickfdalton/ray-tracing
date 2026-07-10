@@ -245,7 +245,7 @@ int main(){
 
     int nx = 800;
     int ny = 400;
-    int ns = 200;
+    int ns = 1000;
     outFile << "P3\n" << nx << " " <<ny << "\n255\n";
 
     // hitable_list world;
