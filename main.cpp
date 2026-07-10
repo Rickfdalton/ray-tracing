@@ -237,11 +237,11 @@ hitable_list scene(){
 }
 
 int main(){
-    std::ofstream outFile("outputs/full_scene_bvh.ppm", std::ios::out);
+    std::ofstream outFile("outputs/full_scene_bvh_longaxis.ppm", std::ios::out);
 
     int nx = 800;
     int ny = 400;
-    int ns = 1000;
+    int ns = 200;
     outFile << "P3\n" << nx << " " <<ny << "\n255\n";
 
     // hitable_list world;

@@ -15,7 +15,18 @@ class bvh_node: public hitable {
         bvh_node(std::vector<std::shared_ptr<hitable>>&objects, size_t start, size_t end){
             // this method to construct bvh.
             // we call from the large aabb and then recursively to small aabb
-            int axis = rand()%3;
+
+            for (size_t i = start; i < end; i++){
+                bbox = aabb(bbox, objects[i]->bounding_box());
+            }
+
+            double x_len = bbox.x.max - bbox.x.min;
+            double y_len = bbox.y.max - bbox.y.min;
+            double z_len = bbox.z.max - bbox.z.min;
+
+            int axis = 0;
+            if (y_len > x_len && y_len > z_len) axis = 1;
+            else if (z_len > x_len && z_len > y_len) axis = 2;
 
             auto box_compare = [axis](const std::shared_ptr<hitable>&a, const std::shared_ptr<hitable>&b){
                 return a->bounding_box().axis_interval(axis).min < b->bounding_box().axis_interval(axis).min;
@@ -35,7 +46,7 @@ class bvh_node: public hitable {
                 left = std::make_shared<bvh_node>(objects, start, mid);
                 right = std::make_shared<bvh_node>(objects, mid, end);
             }
-            bbox= aabb(left->bounding_box(),right->bounding_box());
+            // bbox= aabb(left->bounding_box(),right->bounding_box());
         }
 
         bool hit(const ray&r, float t_min, float t_max, hit_record& rec) const override{
